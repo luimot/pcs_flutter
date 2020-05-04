@@ -1,6 +1,6 @@
 /*
 Links importantes:
-Links NGROK:
+Links NGROK:  --LINKS TEMPORÁRIOS, ALTERAR TODA VEZ QUE FOR COMPILAR--
   -http://f1d30ae1.ngrok.io/ Link do servidor local
   -http://2e5dc8f9.ngrok.io  Link do servidor do Pedro
 Google Maps API key:
@@ -36,7 +36,7 @@ class Home extends StatefulWidget{
 }
 
 class _HomeState extends State<Home>{
-  
+
   final TextEditingController _controller = TextEditingController();
   Future<Album> _futureAlbum;
   static const padDist = 10.0;
@@ -103,7 +103,7 @@ class _HomeState extends State<Home>{
       ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: FutureBuilder<Album>(
+          child: FutureBuilder<Album>(        //Faz com que o body do app esteja adaptado a funções Future
                 future: _futureAlbum,
                 builder: (context, snapshot) {
                 if (snapshot.hasData) {
@@ -120,7 +120,7 @@ class _HomeState extends State<Home>{
 	));
   }
 }
-//Classes cuidando de comunicação JSON com o servidor http
+//Classes cuidando de comunicação JSON com o servidor HTTP
 class Album {
   final int id;
   final String title;
@@ -147,11 +147,11 @@ Future<Album> createAlbum(String title) async {
   );
   debugPrint(response.statusCode.toString());
   if (response.statusCode == 200) {
-    // If the server did return a 201 CREATED response,
+    // If the server did return a 200 CREATED response,
     // then parse the JSON.
     return Album.fromJson(json.decode(response.body));
   } else {
-    // If the server did not return a 201 CREATED response,
+    // If the server did not return a 200 CREATED response,
     // then throw an exception.
     throw Exception('Failed to load album');
   }
