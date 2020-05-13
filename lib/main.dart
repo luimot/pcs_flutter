@@ -21,9 +21,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 
-const serverLink = 'http://2e5dc8f9.ngrok.io';
+const serverLink = 'https://a3781a1d.ngrok.io';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,
@@ -38,10 +38,42 @@ class Home extends StatefulWidget{
 class _HomeState extends State<Home>{
 
   final TextEditingController _controller = TextEditingController();
+  final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
   Future<Album> _futureAlbum;
   static const padDist = 10.0;
-  
+  Position _currentPosition;
+  String _currentAddress;
+
   @override
+  _getAddressFromLatLng() async {
+    try {
+      List<Placemark> p = await geolocator.placemarkFromCoordinates(
+          _currentPosition.latitude, _currentPosition.longitude);
+
+      Placemark place = p[0];
+
+      setState(() {
+        _currentAddress =
+            "${place.locality}, ${place.postalCode}, ${place.country}";
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  _getCurrentLocation() {
+    final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+
+    geolocator
+        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) {
+      setState(() {
+        _currentPosition = position;
+      });
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
   Widget build(BuildContext context) {
 	return Scaffold(
 		appBar:AppBar(
@@ -96,8 +128,9 @@ class _HomeState extends State<Home>{
         RaisedButton(
         child: Text('Enviar'),
         onPressed: (){
+          _getCurrentLocation();
           setState(() {
-            _futureAlbum = createAlbum(_controller.text);
+            _futureAlbum = createAlbum(_currentPosition.latitude, _currentPosition.longitude,_controller.text== null?"null":_controller.text);
           });
         },
       ),
@@ -107,7 +140,7 @@ class _HomeState extends State<Home>{
                 future: _futureAlbum,
                 builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  return Text(snapshot.data.title);    
+                  return Text("Enviado!");    //Text(snapshot.data.title)    
                 }else if (snapshot.hasError) {
                   return Text("${snapshot.error}");
                 }
@@ -135,14 +168,18 @@ class Album {
   }
 }
 
-Future<Album> createAlbum(String title) async {
+Future<Album> createAlbum(double lati, double longi, String sLixo) async {
+  const _userName = 'usuario1234';
   final http.Response response = await http.post(
     serverLink,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
-    body: jsonEncode(<String, String>{
-      'data': title,
+    body: jsonEncode(<String, dynamic>{
+      'latitude': lati,
+      'longitude': longi,
+      'statusLixo': sLixo,
+      'user':_userName,
     }),
   );
   debugPrint(response.statusCode.toString());
@@ -175,21 +212,4 @@ class _GPSpageState extends State<GPSpage> {
       ),
     );
   }
-}
-
-Future <LocationData> checaPermissaoLocation() async{
-  Location location = new Location();
-  bool _serviceEnabled;
-  PermissionStatus _permissionGranted;
-  LocationData _locationData;
-
-  _serviceEnabled = await location.serviceEnabled();
-  if(!_serviceEnabled)
-    _serviceEnabled = await location.serviceEnabled();
-
-  _permissionGranted = await location.hasPermission();
-  if(_permissionGranted == PermissionStatus.denied)
-    _permissionGranted = await location.hasPermission();
-  _locationData = await location.getLocation();
-  return _locationData;
 }
