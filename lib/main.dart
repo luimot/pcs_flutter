@@ -45,7 +45,7 @@ class _HomeState extends State<Home>{
   String _currentAddress;
 
   @override
-  _getAddressFromLatLng() async {
+  _getAddressFromLatLng() async {                 //Função que a partir da localização, infere os detalhes
     try {
       List<Placemark> p = await geolocator.placemarkFromCoordinates(
           _currentPosition.latitude, _currentPosition.longitude);
@@ -61,7 +61,7 @@ class _HomeState extends State<Home>{
     }
   }
 
-  _getCurrentLocation() {
+  _getCurrentLocation() {             //Função que recebe do aparelho Latitude e Longitude
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
 
     geolocator
