@@ -11,7 +11,7 @@ Alguns links usados no desenvolvimento desse aplicativo:
 
 - [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
 - [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-- [Tutorial de uso API Google Maps](-https://codelabs.developers.google.com/codelabs/google-maps-in-flutter/#0)
+- [Tutorial de uso API Google Maps](https://codelabs.developers.google.com/codelabs/google-maps-in-flutter/#0)
 - [Navegação com Flutter](https://flutter.dev/docs/cookbook/navigation/navigation-basics)
 - [Método HTTP POST no Flutter](https://flutter.dev/docs/cookbook/networking/send-data)
 - [Curso da Udemy de Criação de Apps com Flutter](https://www.udemy.com/course/curso-completo-flutter-app-android-ios)
