@@ -5,6 +5,8 @@ Links NGROK:  --LINKS TEMPORÁRIOS, ALTERAR TODA VEZ QUE FOR COMPILAR--
   -http://2e5dc8f9.ngrok.io  Link do servidor do Pedro
 Google Maps API key:
   -
+Classe DateTime:
+  -https://api.flutter.dev/flutter/dart-core/DateTime-class.html
 Google API tutoriais:
   -https://pub.dev/packages/google_maps_flutter
   -https://codelabs.developers.google.com/codelabs/google-maps-in-flutter/#0 <- Parece promissor!
@@ -22,8 +24,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-const serverLink = 'https://a3781a1d.ngrok.io';
+const serverLink = 'http://7965ebfd.ngrok.io';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,
@@ -37,13 +40,14 @@ class Home extends StatefulWidget{
 
 class _HomeState extends State<Home>{
 
-  final TextEditingController _controller = TextEditingController();
+  //final TextEditingController _controller = TextEditingController();
+  String _status;
   final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
   Future<Album> _futureAlbum;
   static const padDist = 10.0;
   Position _currentPosition;
   String _currentAddress;
-
+  
   @override
   _getAddressFromLatLng() async {                 //Função que a partir da localização, infere os detalhes
     try {
@@ -113,14 +117,22 @@ class _HomeState extends State<Home>{
 		backgroundColor: Colors.white,
 		body: SingleChildScrollView(
       child:Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-			children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-        child: TextField(
-        controller: _controller,
-        decoration: InputDecoration(hintText: 'Comunicação',fillColor: Colors.green,hintStyle: TextStyle(color:Colors.green)),
-        )
+        mainAxisAlignment: MainAxisAlignment.center,
+			  children: <Widget>[
+        new DropdownButton<String>(
+          dropdownColor:Colors.green[200],
+          items: <String>['Medio','Cheio','Transbordando'].map((String value) {
+            return new DropdownMenuItem<String>(
+              value: value,
+              child: new Text(value),
+            );
+          }).toList(),
+          value:_status,
+          onChanged: (String value) {
+            setState((){
+            _status = value;
+            });
+          },
         ),
         Padding(padding: EdgeInsets.zero,
 					child: Image.asset("images/logo.png",alignment: Alignment.center,),
@@ -130,7 +142,7 @@ class _HomeState extends State<Home>{
         onPressed: (){
           _getCurrentLocation();
           setState(() {
-            _futureAlbum = createAlbum(_currentPosition.latitude, _currentPosition.longitude,_controller.text== null?"null":_controller.text);
+            _futureAlbum = createAlbum(_currentPosition.latitude, _currentPosition.longitude,_status== null?"nulo":_status);
           });
         },
       ),
@@ -170,6 +182,9 @@ class Album {
 
 Future<Album> createAlbum(double lati, double longi, String sLixo) async {
   const _userName = 'usuario1234';
+  DateTime now =new DateTime.now();
+  DateTime currentTime = new DateTime(now.year, now.month, now.day, now.hour, now.minute);
+  //String currentTime = DateFormat('kk:mm').format(now);
   final http.Response response = await http.post(
     serverLink,
     headers: <String, String>{
@@ -180,6 +195,7 @@ Future<Album> createAlbum(double lati, double longi, String sLixo) async {
       'longitude': longi,
       'statusLixo': sLixo,
       'user':_userName,
+      'timestamp':currentTime.toString(),
     }),
   );
   debugPrint(response.statusCode.toString());
@@ -201,15 +217,60 @@ class GPSpage extends StatefulWidget {
 }
 
 class _GPSpageState extends State<GPSpage> {
+  GoogleMapController mapController;
+  void _onMapCreated(GoogleMapController controller){
+    mapController = controller;
+  }
+  
+  final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+  static Position _currentPosition;
+
   @override
+  LatLng _center = LatLng(-25.5464631,-49.3411338); //Localização padrão
+  _getCurrentLocation() {             //Função que recebe do aparelho Latitude e Longitude
+    final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+
+    geolocator
+        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) {
+      setState(() {
+        _currentPosition = position;
+      });
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title:const Text("GPS",style: TextStyle(fontSize: 25.0),),
+      appBar: AppBar(
+        title:const Text("GPS"
+        ,style: TextStyle(fontSize: 25.0),
+        
+        ),
 			backgroundColor: Colors.green,
 			centerTitle: true,
-
+      actions: <Widget>[
+				IconButton(
+					icon: Icon(Icons.add_location),
+					onPressed:(){
+            setState((){
+              _getCurrentLocation();
+              _center=LatLng(_currentPosition.latitude,_currentPosition.longitude);
+            });
+          },
+				),
+			
+      ],
       ),
+      body: GoogleMap(
+        onMapCreated: _onMapCreated,
+        compassEnabled: true,
+
+        initialCameraPosition: CameraPosition(
+          target:_center,
+          zoom:10.0),
+      )
     );
   }
 }
