@@ -12,7 +12,7 @@ Google API tutoriais:
   -https://codelabs.developers.google.com/codelabs/google-maps-in-flutter/#0 <- Parece promissor!
 Flutter Navigation:
   -https://flutter.dev/docs/cookbook/navigation/navigation-basics
-HTTPS POST com Album JSON no Flutter:
+HTTPS POST com Album JSON no Flutter: 
   -https://flutter.dev/docs/cookbook/networking/send-data
 Location lib basics:
   -https://pub.dev/packages/location
@@ -26,7 +26,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-const serverLink = 'http://7965ebfd.ngrok.io';
+var serverLink = 'https://62c72fe6226e.ngrok.io';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,
@@ -84,13 +84,6 @@ class _HomeState extends State<Home>{
 			title: const Text("Wireless Trash",style: TextStyle(fontSize: 25.0),),
 			backgroundColor: Colors.green,
 			centerTitle: true,
-			actions: <Widget>[
-				IconButton(
-					icon: Icon(Icons.refresh),
-					onPressed:(){},
-				),
-			
-      ],
 		),
 		drawer: Drawer(
 			child:ListView(
@@ -111,20 +104,39 @@ class _HomeState extends State<Home>{
             MaterialPageRoute(builder: (context) =>GPSpage())
             );},
 					),
+          ListTile(
+            title: Text("Configurações"),
+            leading: Icon(Icons.settings),
+            onTap: (){
+              Navigator.push(context, 
+              MaterialPageRoute(builder: (context) =>Configuracoes())
+              );
+            },
+          ),
+          ListTile(
+            title:Text("Dados"),
+            leading: Icon(Icons.library_books),
+            onTap: (){
+              Navigator.push(context,
+              MaterialPageRoute(builder: (context) => RecebeDados())
+              );
+            }
+          ),
 				],
 			),
 		),
 		backgroundColor: Colors.white,
-		body: SingleChildScrollView(
+		body: Padding(
+      padding: EdgeInsets.only(left:110.0),
       child:Column(
         mainAxisAlignment: MainAxisAlignment.center,
 			  children: <Widget>[
-        new DropdownButton<String>(
+        DropdownButton<String>(
           dropdownColor:Colors.green[200],
           items: <String>['Medio','Cheio','Transbordando'].map((String value) {
-            return new DropdownMenuItem<String>(
+            return DropdownMenuItem<String>(
               value: value,
-              child: new Text(value),
+              child: Text(value),
             );
           }).toList(),
           value:_status,
@@ -134,10 +146,10 @@ class _HomeState extends State<Home>{
             });
           },
         ),
-        Padding(padding: EdgeInsets.zero,
-					child: Image.asset("images/logo.png",alignment: Alignment.center,),
-				),
-        RaisedButton(
+        Image.asset("images/logo.png"),
+        Padding(
+        padding: EdgeInsets.only(top:20.0,bottom:20.0),
+        child:RaisedButton(
         child: Text('Enviar'),
         onPressed: (){
           _getCurrentLocation();
@@ -145,9 +157,9 @@ class _HomeState extends State<Home>{
             _futureAlbum = createAlbum(_currentPosition.latitude, _currentPosition.longitude,_status== null?"nulo":_status);
           });
         },
-      ),
+      ),),
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(padDist),
           child: FutureBuilder<Album>(        //Faz com que o body do app esteja adaptado a funções Future
                 future: _futureAlbum,
                 builder: (context, snapshot) {
@@ -161,8 +173,8 @@ class _HomeState extends State<Home>{
             ) 
         )
 			],
-		),
-	));
+		),),
+  );
   }
 }
 //Classes cuidando de comunicação JSON com o servidor HTTP
@@ -181,21 +193,17 @@ class Album {
 }
 
 Future<Album> createAlbum(double lati, double longi, String sLixo) async {
-  const _userName = 'usuario1234';
-  DateTime now =new DateTime.now();
-  DateTime currentTime = new DateTime(now.year, now.month, now.day, now.hour, now.minute);
-  //String currentTime = DateFormat('kk:mm').format(now);
+  const _userName = 'usuario4321';
   final http.Response response = await http.post(
     serverLink,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
-    body: jsonEncode(<String, dynamic>{
+    body: jsonEncode(<String, dynamic>{         //Dados e estruturas em JSON
       'latitude': lati,
       'longitude': longi,
       'statusLixo': sLixo,
       'user':_userName,
-      'timestamp':currentTime.toString(),
     }),
   );
   debugPrint(response.statusCode.toString());
@@ -206,7 +214,7 @@ Future<Album> createAlbum(double lati, double longi, String sLixo) async {
   } else {
     // If the server did not return a 200 CREATED response,
     // then throw an exception.
-    throw Exception('Failed to load album');
+    return null;
   }
 }
 
@@ -226,7 +234,7 @@ class _GPSpageState extends State<GPSpage> {
   static Position _currentPosition;
 
   @override
-  LatLng _center = LatLng(-25.5464631,-49.3411338); //Localização padrão
+  LatLng _center = LatLng(-23.5700987,-46.8580335); //Localização padrão
   _getCurrentLocation() {             //Função que recebe do aparelho Latitude e Longitude
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
 
@@ -266,11 +274,88 @@ class _GPSpageState extends State<GPSpage> {
       body: GoogleMap(
         onMapCreated: _onMapCreated,
         compassEnabled: true,
-
+        mapType: MapType.normal,
         initialCameraPosition: CameraPosition(
           target:_center,
-          zoom:10.0),
+          zoom:9.0),
       )
     );
   }
 }
+
+//Classes da página de Configurações
+class Configuracoes extends StatefulWidget {
+  @override
+  _ConfiguracoesState createState() => _ConfiguracoesState();
+}
+
+class _ConfiguracoesState extends State<Configuracoes> {
+  final TextEditingController _controller = TextEditingController();
+  @override
+  Widget build(BuildContext context) {
+    return
+      Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text("Configurações",style: TextStyle(fontSize: 25.0)),
+          centerTitle: true,
+          backgroundColor: Colors.green,
+        ),
+        body:Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(padding: const EdgeInsets.all(40.0),
+              child: Text('O Link atual é: \n'+ serverLink,textAlign: TextAlign.center),
+            ),
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(hintText: 'Link NGROK',fillColor: Colors.green,hintStyle: TextStyle(color:Colors.green)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(40.0),
+              child:
+              RaisedButton(
+                child: Text('Alterar'),
+                onPressed: (){
+                  setState(() {
+                    serverLink = _controller.text;
+                  });
+              },
+            ),),
+          ],
+        ),
+      );
+  }
+}
+
+class RecebeDados extends StatefulWidget {
+  @override
+  _RecebeDadosState createState() => _RecebeDadosState();
+}
+
+class _RecebeDadosState extends State<RecebeDados> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Dados de envio",style: TextStyle(fontSize: 25.0)),
+          centerTitle: true,
+          backgroundColor: Colors.green,
+      ),
+
+    );
+  }
+}
+/*
+Future<http.Response> fetchAlbum() async{
+  final response = await http.get(serverLink);
+  if (response.statusCode == 200) {
+    // If the server did return a 200 OK response,
+    // then parse the JSON.
+    return Album.fromJson(json.decode(response.body));
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load album');
+  }
+}*/
