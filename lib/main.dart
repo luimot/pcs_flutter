@@ -30,6 +30,7 @@ import 'package:google_map_polyline/google_map_polyline.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 var serverLink = 'http://2ea642b66681.ngrok.io';
+const gmApi = 'AIzaSyBwxya-OarYHNjXHXKSiTn_gNUHw9AYlcc';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,
@@ -182,7 +183,7 @@ class _HomeState extends State<Home>{
             return (_currentAddress);
           }
           else{
-            return "";
+            return '';
           }
         }()),textAlign: TextAlign.center,),
 			],
@@ -238,15 +239,31 @@ class GPSpage extends StatefulWidget {
 }
 
 class _GPSpageState extends State<GPSpage> {
+  final Set<Polyline> polyline = {};
   GoogleMapController mapController;
   void _onMapCreated(GoogleMapController controller){
     mapController = controller;
   }
-  
+  GoogleMapPolyline googleMapPolyline = new GoogleMapPolyline(apiKey: gmApi);
+  List<LatLng> routeCoords;
   final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
   static Position _currentPosition;
+  //Ainda p implementar direito
+  getsomePoints() async {
+    routeCoords = await googleMapPolyline.getCoordinatesWithLocation(
+    origin: LatLng(40.6782, -73.9442),
+    destination: LatLng(40.6944, -73.9212),
+    mode: RouteMode.driving);
+  }
 
-  @override
+  getaddressPoints() async {
+    routeCoords = await googleMapPolyline.getPolylineCoordinatesWithAddress(
+      origin: '55 Kingston Ave, Brooklyn, NY 11213, USA',
+      destination: '178 Broadway, Brooklyn, NY 11211, USA',
+      mode: RouteMode.driving);
+  }
+  //Ainda p implementar direito
+  
   LatLng _center = LatLng(-23.5700987,-46.8580335); //Localização padrão
   _getCurrentLocation() {             //Função que recebe do aparelho Latitude e Longitude
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
@@ -261,6 +278,7 @@ class _GPSpageState extends State<GPSpage> {
       debugPrint(e);
     });
   }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -285,14 +303,30 @@ class _GPSpageState extends State<GPSpage> {
       ],
       ),
       body: GoogleMap(
-        onMapCreated: _onMapCreated,
+        onMapCreated: onMapCreated,
         compassEnabled: true,
+        polylines: polyline,
         mapType: MapType.normal,
         initialCameraPosition: CameraPosition(
           target:_center,
           zoom:9.0),
       )
     );
+  }
+
+  void onMapCreated(GoogleMapController controller) {
+    setState(() {
+      mapController = controller;
+
+      polyline.add(Polyline(
+          polylineId: PolylineId('route1'),
+          visible: true,
+          points: routeCoords,
+          width: 4,
+          color: Colors.blue,
+          startCap: Cap.roundCap,
+          endCap: Cap.buttCap));
+    });
   }
 }
 
@@ -340,6 +374,7 @@ class _ConfiguracoesState extends State<Configuracoes> {
         ),
       );
   }
+  
 }
 //Classe de Página de Dados
 class RecebeDados extends StatefulWidget {
