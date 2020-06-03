@@ -5,6 +5,8 @@ Links NGROK:  --LINKS TEMPORÁRIOS, ALTERAR TODA VEZ QUE FOR COMPILAR--
   -http://2e5dc8f9.ngrok.io  Link do servidor do Pedro
 Google Maps API key:
   -
+GitHub uso de Polyline no Maps:
+  -https://github.com/rajayogan/flutter-googlemaps-routes/blob/master/lib/main.dart
 Classe DateTime:
   -https://api.flutter.dev/flutter/dart-core/DateTime-class.html
 Google API tutoriais:
@@ -24,9 +26,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:google_map_polyline/google_map_polyline.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-var serverLink = 'https://62c72fe6226e.ngrok.io';
+var serverLink = 'http://2ea642b66681.ngrok.io';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,
@@ -48,7 +51,7 @@ class _HomeState extends State<Home>{
   Position _currentPosition;
   String _currentAddress;
   
-  @override
+  
   _getAddressFromLatLng() async {                 //Função que a partir da localização, infere os detalhes
     try {
       List<Placemark> p = await geolocator.placemarkFromCoordinates(
@@ -58,7 +61,7 @@ class _HomeState extends State<Home>{
 
       setState(() {
         _currentAddress =
-            "${place.locality}, ${place.postalCode}, ${place.country}";
+            "${place.subLocality}, ${place.postalCode}, ${place.country}";
       });
     } catch (e) {
       print(e);
@@ -78,6 +81,7 @@ class _HomeState extends State<Home>{
       debugPrint(e);
     });
   }
+  @override
   Widget build(BuildContext context) {
 	return Scaffold(
 		appBar:AppBar(
@@ -127,7 +131,7 @@ class _HomeState extends State<Home>{
 		),
 		backgroundColor: Colors.white,
 		body: Padding(
-      padding: EdgeInsets.only(left:110.0),
+      padding: EdgeInsets.symmetric(horizontal:110.0),
       child:Column(
         mainAxisAlignment: MainAxisAlignment.center,
 			  children: <Widget>[
@@ -153,6 +157,7 @@ class _HomeState extends State<Home>{
         child: Text('Enviar'),
         onPressed: (){
           _getCurrentLocation();
+          _getAddressFromLatLng();
           setState(() {
             _futureAlbum = createAlbum(_currentPosition.latitude, _currentPosition.longitude,_status== null?"nulo":_status);
           });
@@ -166,12 +171,20 @@ class _HomeState extends State<Home>{
                 if (snapshot.hasData) {
                   return Text("Enviado!");    //Text(snapshot.data.title)    
                 }else if (snapshot.hasError) {
-                  return Text("${snapshot.error}");
+                  return Text("Enviado!");    //É mensagem de erro mas é pq deu certo
                 }
                 return CircularProgressIndicator();
               },
             ) 
-        )
+        ),
+        Text(((){
+          if(_currentAddress != null){
+            return (_currentAddress);
+          }
+          else{
+            return "";
+          }
+        }()),textAlign: TextAlign.center,),
 			],
 		),),
   );
@@ -312,13 +325,14 @@ class _ConfiguracoesState extends State<Configuracoes> {
               decoration: InputDecoration(hintText: 'Link NGROK',fillColor: Colors.green,hintStyle: TextStyle(color:Colors.green)),
             ),
             Padding(
-              padding: const EdgeInsets.all(40.0),
+              padding: const EdgeInsets.all(30.0),
               child:
               RaisedButton(
                 child: Text('Alterar'),
                 onPressed: (){
+                  String aux=retornaNgrok(_controller.text);
                   setState(() {
-                    serverLink = _controller.text;
+                    serverLink = aux;
                   });
               },
             ),),
@@ -327,13 +341,14 @@ class _ConfiguracoesState extends State<Configuracoes> {
       );
   }
 }
-
+//Classe de Página de Dados
 class RecebeDados extends StatefulWidget {
   @override
   _RecebeDadosState createState() => _RecebeDadosState();
 }
 
 class _RecebeDadosState extends State<RecebeDados> {
+  String _dadosRecebidos="Nada aqui, por enquanto!";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -342,12 +357,35 @@ class _RecebeDadosState extends State<RecebeDados> {
           centerTitle: true,
           backgroundColor: Colors.green,
       ),
-
+      body: 
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children:
+        <Widget>[
+          Padding(
+          padding: const EdgeInsets.only(left:110.0),
+          child:
+            Text(_dadosRecebidos),
+          ),
+          Padding(
+          padding: const EdgeInsets.only(left:110.0,top:10.0),
+          child:
+            RaisedButton(
+              child: Text("Receber Dados!"),
+              onPressed: (){
+                setState(){
+                  //_dadosRecebidos=fetchAlbum();
+                };
+            },
+          ),
+          ),
+        ]
+      ),
     );
   }
 }
-/*
-Future<http.Response> fetchAlbum() async{
+//Função pra criar album a partir de um GET ao serverLink
+Future<Album> fetchAlbum() async{
   final response = await http.get(serverLink);
   if (response.statusCode == 200) {
     // If the server did return a 200 OK response,
@@ -358,4 +396,15 @@ Future<http.Response> fetchAlbum() async{
     // then throw an exception.
     throw Exception('Failed to load album');
   }
-}*/
+}
+//Função pra facilitar input do endereço NGROK
+String retornaNgrok(String s){
+  if(s.substring(0,7) != "https://"){
+    s="https://"+s;
+  }
+  if(!s.contains(".ngrok.io")){
+    s=s+".ngrok.io";
+  }
+  return s;
+
+}
