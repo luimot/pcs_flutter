@@ -7,6 +7,7 @@ Google Maps API key:
   -
 GitHub uso de Polyline no Maps:
   -https://github.com/rajayogan/flutter-googlemaps-routes/blob/master/lib/main.dart
+  -https://github.com/DeveloperLibs/flutter_google_map_route
 Classe DateTime:
   -https://api.flutter.dev/flutter/dart-core/DateTime-class.html
 Google API tutoriais:
@@ -26,11 +27,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import 'package:google_map_polyline/google_map_polyline.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:pcs_prj/mapping.dart';
 
-var serverLink = 'http://2ea642b66681.ngrok.io';
-const gmApi = 'AIzaSyBwxya-OarYHNjXHXKSiTn_gNUHw9AYlcc';
+var serverLink = 'https://afc44fe2a6d5.ngrok.io';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,
@@ -56,13 +55,13 @@ class _HomeState extends State<Home>{
   _getAddressFromLatLng() async {                 //Função que a partir da localização, infere os detalhes
     try {
       List<Placemark> p = await geolocator.placemarkFromCoordinates(
-          _currentPosition.latitude, _currentPosition.longitude);
+        _currentPosition.latitude, _currentPosition.longitude);
 
       Placemark place = p[0];
 
       setState(() {
         _currentAddress =
-            "${place.subLocality}, ${place.postalCode}, ${place.country}";
+          "${place.subLocality}, ${place.postalCode}, ${place.country}";
       });
     } catch (e) {
       print(e);
@@ -233,102 +232,6 @@ Future<Album> createAlbum(double lati, double longi, String sLixo) async {
 }
 
 //Classes de página do GPS
-class GPSpage extends StatefulWidget {
-  @override
-  _GPSpageState createState() => _GPSpageState();
-}
-
-class _GPSpageState extends State<GPSpage> {
-  final Set<Polyline> polyline = {};
-  GoogleMapController mapController;
-  void _onMapCreated(GoogleMapController controller){
-    mapController = controller;
-  }
-  GoogleMapPolyline googleMapPolyline = new GoogleMapPolyline(apiKey: gmApi);
-  List<LatLng> routeCoords;
-  final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
-  static Position _currentPosition;
-  //Ainda p implementar direito
-  getsomePoints() async {
-    routeCoords = await googleMapPolyline.getCoordinatesWithLocation(
-    origin: LatLng(40.6782, -73.9442),
-    destination: LatLng(40.6944, -73.9212),
-    mode: RouteMode.driving);
-  }
-
-  getaddressPoints() async {
-    routeCoords = await googleMapPolyline.getPolylineCoordinatesWithAddress(
-      origin: '55 Kingston Ave, Brooklyn, NY 11213, USA',
-      destination: '178 Broadway, Brooklyn, NY 11211, USA',
-      mode: RouteMode.driving);
-  }
-  //Ainda p implementar direito
-  
-  LatLng _center = LatLng(-23.5700987,-46.8580335); //Localização padrão
-  _getCurrentLocation() {             //Função que recebe do aparelho Latitude e Longitude
-    final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
-
-    geolocator
-        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
-      setState(() {
-        _currentPosition = position;
-      });
-    }).catchError((e) {
-      debugPrint(e);
-    });
-  }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title:const Text("GPS"
-        ,style: TextStyle(fontSize: 25.0),
-        
-        ),
-			backgroundColor: Colors.green,
-			centerTitle: true,
-      actions: <Widget>[
-				IconButton(
-					icon: Icon(Icons.add_location),
-					onPressed:(){
-            setState((){
-              _getCurrentLocation();
-              _center=LatLng(_currentPosition.latitude,_currentPosition.longitude);
-            });
-          },
-				),
-			
-      ],
-      ),
-      body: GoogleMap(
-        onMapCreated: onMapCreated,
-        compassEnabled: true,
-        polylines: polyline,
-        mapType: MapType.normal,
-        initialCameraPosition: CameraPosition(
-          target:_center,
-          zoom:9.0),
-      )
-    );
-  }
-
-  void onMapCreated(GoogleMapController controller) {
-    setState(() {
-      mapController = controller;
-
-      polyline.add(Polyline(
-          polylineId: PolylineId('route1'),
-          visible: true,
-          points: routeCoords,
-          width: 4,
-          color: Colors.blue,
-          startCap: Cap.roundCap,
-          endCap: Cap.buttCap));
-    });
-  }
-}
 
 //Classes da página de Configurações
 class Configuracoes extends StatefulWidget {
@@ -384,6 +287,12 @@ class RecebeDados extends StatefulWidget {
 
 class _RecebeDadosState extends State<RecebeDados> {
   String _dadosRecebidos="Nada aqui, por enquanto!";
+  Future<Album> futureAlbum;
+  @override
+  void initState() {
+    super.initState();
+    futureAlbum = fetchAlbum();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -408,9 +317,22 @@ class _RecebeDadosState extends State<RecebeDados> {
             RaisedButton(
               child: Text("Receber Dados!"),
               onPressed: (){
-                setState(){
-                  //_dadosRecebidos=fetchAlbum();
-                };
+                setState((){
+                  FutureBuilder<Album>(
+                    future: futureAlbum,
+                    builder:  (context, snapshot) {
+              if (snapshot.hasData) {
+                debugPrint(snapshot.data.title);
+                return Text(snapshot.data.title);
+
+              } else if (snapshot.hasError) {
+                return Text("${snapshot.error}");
+              }
+              // By default, show a loading spinner.
+              return CircularProgressIndicator();
+              }, 
+                    );
+                },);
             },
           ),
           ),
