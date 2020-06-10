@@ -29,7 +29,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:pcs_prj/mapping.dart';
 
-var serverLink = 'https://afc44fe2a6d5.ngrok.io';
+var serverLink = 'https://724c38d8f4f5.ngrok.io';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,

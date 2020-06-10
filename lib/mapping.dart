@@ -4,6 +4,8 @@ Vídeo muito bom do YT sobre Flutter Google Maps:
 Visualizadores da estrutura JSON
   -http://chris.photobooks.com/json/default.htm -> Para ver no modo geral
   -http://jsonviewer.stack.hu/                  -> Para ver no modo de árvore
+Git muito bom sobre parsear JSONs mais complexos:
+  -https://github.com/PoojaB26/ParsingJSON-Flutter
 */
 import 'dart:collection';
 import 'package:flutter/material.dart';
@@ -26,20 +28,18 @@ class _GPSpageState extends State<GPSpage> {
   GoogleMapController _controller;
   List<LatLng> routeCoords = List<LatLng>();
   List<LatLng> _rotasColeta = List<LatLng>();
-  //TODO: Lista provisória, trocar com o que receber por GET
-  void _setaColetas() async{
-    List<LatLng> aux = await _recebeCoords();
-  _rotasColeta.add(LatLng(-25.5463171,-49.3436507));
-  _rotasColeta.add(LatLng(-25.46535,-49.2993802));
-  _rotasColeta.add(LatLng(-25.4600758,-49.2883522));
-  _rotasColeta.add(LatLng(-25.4613263,-49.2933112));
-  for(var i=0;i<aux.length;i++){
-  _rotasColeta.add(aux[i]);
+  DadosList cGeral;
+  void _setaColetas(){
+    List<LatLng> temp = List<LatLng>();
+    for(var i=0;i<cGeral.dados.length;i++){
+      debugPrint(cGeral.dados[i].latitude.toString());debugPrint(cGeral.dados[i].longitude.toString());
+      temp.add(LatLng(cGeral.dados[i].latitude,cGeral.dados[i].longitude));
+      _rotasColeta=temp.toSet().toList();
     }
   }
   //Lista provisória, trocar com o que receber por GET
   GoogleMapPolyline googleMapPolyline = new GoogleMapPolyline(apiKey:gmApi);
-
+  
   _pegaCoordenadas() async {
     List<LatLng> aux;
     var permissions =
@@ -55,9 +55,9 @@ class _GPSpageState extends State<GPSpage> {
           mode: RouteMode.driving);
         routeCoords.addAll(aux);
         _markers.add(Marker(
-          markerId: MarkerId("m${c+2}"),
+          markerId: MarkerId("m${c+1}"),
           position: _rotasColeta[c+1],
-          infoWindow: InfoWindow(title:"Lixeira Cheia!",snippet:"${c+2} ª Lixeira a ser coletada")
+          infoWindow: InfoWindow(title:"Lixeira ${cGeral.dados[c].status}!",snippet:"${c+1} ª Lixeira a ser coletada")
         ));
       }
     }
@@ -66,19 +66,12 @@ class _GPSpageState extends State<GPSpage> {
   void onMapCreated(GoogleMapController controller) {
     setState(() {
       _controller = controller;
-      _markers.add(Marker(
-        markerId: MarkerId("m0"),
-        position: LatLng(-25.5463171,-49.3436507),
-        infoWindow: InfoWindow(
-          title:"Local inicial",
-          snippet: "Vá até lá!"
-        ),
-      ));
     });
   }
 
-  void setPolylines(){
-    polyline.add(Polyline(
+  void setPolylines() async {
+    Set<Polyline> temp = HashSet<Polyline>();
+    temp.add(Polyline(
           polylineId: PolylineId("p0"),
           visible: true,
           points: routeCoords,
@@ -86,11 +79,11 @@ class _GPSpageState extends State<GPSpage> {
           color: Colors.blue,
           startCap: Cap.roundCap,
           endCap: Cap.buttCap));
+    polyline=temp.toSet();
   }
   @override
-  void initState() {
+  void initState(){
     super.initState();
-    _setaColetas();
     _pegaCoordenadas();
     setPolylines();
   }
@@ -99,7 +92,7 @@ class _GPSpageState extends State<GPSpage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Wireless Trash",style: TextStyle(fontSize: 25.0),),
+        title: const Text("GPS",style: TextStyle(fontSize: 25.0),),
         backgroundColor: Colors.green,
         centerTitle: true,
         actions: <Widget>[
@@ -107,42 +100,94 @@ class _GPSpageState extends State<GPSpage> {
             onPressed: (){
               setState((){
                 _setaColetas();
+                setPolylines();
+                _pegaCoordenadas();
               });
             },
             child: Icon(Icons.add_location,color: Colors.white,size:25.0),
           ),
         ]
       ),
-      body: GoogleMap(
-      onMapCreated: onMapCreated,
-      polylines: polyline,
-      markers: _markers,
-      myLocationButtonEnabled: true,
-      myLocationEnabled: true,
-      initialCameraPosition:
-        CameraPosition(target: LatLng(-25.4950501,-49.4298855), zoom: 9.0),
-      mapType: MapType.normal,
-    ));
+      body:
+      FutureBuilder<DadosList>(
+            future: _recebeCoords(),
+            builder: (BuildContext context,AsyncSnapshot<DadosList> snapshot){
+              List<Widget> children;
+              Widget child;
+              if(snapshot.hasData){
+                cGeral=snapshot.data;
+                child= GoogleMap(
+                  onMapCreated: onMapCreated,
+                  polylines: polyline,
+                  markers: _markers,
+                  myLocationButtonEnabled: true,
+                  myLocationEnabled: true,
+                  initialCameraPosition:
+                    CameraPosition(target: LatLng(-23.5614355,-46.732825), zoom: 15.0),
+                  mapType: MapType.normal,
+                );
+                return Scaffold(body:child);
+              }
+              else if (snapshot.hasError) {
+                children = <Widget>[
+                  Icon(
+                    Icons.error,
+                    color: Colors.red,
+                    size: 60,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Text('Error: ${snapshot.error}'),
+                  )
+                ];
+              }
+              else{
+                children=<Widget>[
+                  Padding(
+                    padding: EdgeInsets.only(left: 80.0),
+                    child:
+                    SizedBox(
+                      child:CircularProgressIndicator(),
+                      width: 200,
+                      height: 200,
+                  ))
+                ];
+              }
+              return Column(mainAxisAlignment: MainAxisAlignment.center,children: children);
+            }
+          ), 
+    );
   }
 }
-//TODO: Implementar código para ler do GET
-Future<List<LatLng>> _recebeCoords() async{
+
+Future<DadosList> _recebeCoords() async{
   http.Response _resposta = await http.get(serverLink);
-  if(_resposta.statusCode == 200){
-    var data = json.decode(_resposta.body) as List;
-  }
+    return DadosList.fromJson(json.decode(_resposta.body));
 }
 
 class DadosCelulares{
   double latitude;
   double longitude;
-  int id;
-  DadosCelulares({this.latitude,this.longitude,this.id});
+  String id;
+  String status;
+  DadosCelulares({this.latitude,this.longitude,this.id,this.status});
   factory DadosCelulares.fromJson(Map<String,dynamic> json){
-    return DadosCelulares(
-      latitude:json['latitude'],
-      longitude:json['longitude'],
-      id:json['id'],
+    return new DadosCelulares(
+      id:json['id'].toString(),
+      latitude:json['latitude'].toDouble(),
+      longitude:json['longitude'].toDouble(),
+      status:json['status'],
     );
   }
+}
+
+class DadosList{
+  final List<DadosCelulares> dados;
+  DadosList({this.dados});
+  factory DadosList.fromJson(List<dynamic> json){
+    List<DadosCelulares> dados = new List<DadosCelulares>();
+    dados = json.map((i)=>DadosCelulares.fromJson(i)).toList(); 
+    return new DadosList(dados:dados);
+  }
+
 }
