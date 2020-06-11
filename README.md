@@ -15,6 +15,7 @@ Alguns links usados no desenvolvimento desse aplicativo:
 - [Navegação com Flutter](https://flutter.dev/docs/cookbook/navigation/navigation-basics)
 - [Método HTTP POST no Flutter](https://flutter.dev/docs/cookbook/networking/send-data)
 - [Curso da Udemy de Criação de Apps com Flutter](https://www.udemy.com/course/curso-completo-flutter-app-android-ios)
+- Outros Links estão no cabeçalho de lib/main.dart e lib/mapping.dart
 
 
 ### Mais informações

@@ -159,12 +159,12 @@ class _GPSpageState extends State<GPSpage> {
     );
   }
 }
-
+//Função que recebe os dados do servidor por método GET
 Future<DadosList> _recebeCoords() async{
   http.Response _resposta = await http.get(serverLink);
     return DadosList.fromJson(json.decode(_resposta.body));
 }
-
+//Classes organizando as informações passadas pelo servidor
 class DadosCelulares{
   double latitude;
   double longitude;
