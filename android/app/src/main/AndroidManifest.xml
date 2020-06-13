@@ -9,10 +9,10 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="pcs_prj"
-        android:icon="@mipmap/ic_launcher">
+        android:label="Wireless Thrash"
+        android:icon="@mipmap/logo">        <!--Ícone do app, path: android/app/src/main/res/mipmap*-->
         <meta-data android:name="com.google.android.geo.API_KEY"
-               android:value="AIzaSyBwxya-OarYHNjXHXKSiTn_gNUHw9AYlcc"/>
+               android:value="sua_chave_aqui"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

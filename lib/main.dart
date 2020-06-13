@@ -1,10 +1,4 @@
 /*
-Links importantes:
-Links NGROK:  --LINKS TEMPORÁRIOS, ALTERAR TODA VEZ QUE FOR COMPILAR--
-  -http://f1d30ae1.ngrok.io/ Link do servidor local
-  -http://2e5dc8f9.ngrok.io  Link do servidor do Pedro
-Google Maps API key:
-  -
 GitHub uso de Polyline no Maps:
   -https://github.com/rajayogan/flutter-googlemaps-routes/blob/master/lib/main.dart
   -https://github.com/DeveloperLibs/flutter_google_map_route
@@ -29,7 +23,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:pcs_prj/mapping.dart';
 
-var serverLink = 'https://724c38d8f4f5.ngrok.io';
+String serverLink = 'link_do_servidor';
 
 void main() => runApp(MaterialApp(
 	debugShowCheckedModeBanner: false,
@@ -61,7 +55,7 @@ class _HomeState extends State<Home>{
 
       setState(() {
         _currentAddress =
-          "${place.subLocality}, ${place.postalCode}, ${place.country}";
+          "${place.subLocality}, ${place.country}";
       });
     } catch (e) {
       print(e);
@@ -78,14 +72,14 @@ class _HomeState extends State<Home>{
         _currentPosition = position;
       });
     }).catchError((e) {
-      debugPrint(e);
+      debugPrint(e);  
     });
   }
   @override
   Widget build(BuildContext context) {
 	return Scaffold(
 		appBar:AppBar(
-			title: const Text("Wireless Trash",style: TextStyle(fontSize: 25.0),),
+			title: const Text("Wireless Thrash",style: TextStyle(fontSize: 25.0),),
 			backgroundColor: Colors.green,
 			centerTitle: true,
 		),
@@ -105,8 +99,8 @@ class _HomeState extends State<Home>{
 						title: Text("GPS"),
 						leading: Icon(Icons.gps_fixed),
 						onTap: (){Navigator.push(context, 
-            MaterialPageRoute(builder: (context) =>GPSpage())
-            );},
+            MaterialPageRoute(builder: (context) =>GPSpage()));
+            },
 					),
           ListTile(
             title: Text("Configurações"),
@@ -213,13 +207,12 @@ Future<Album> createAlbum(double lati, double longi, String sLixo) async {
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, dynamic>{         //Dados e estruturas em JSON
-      'latitude': lati,
-      'longitude': longi,
+      'latitude': lati,                         //Desse jeito é mais fácil, ao precisar adicionar um dado
+      'longitude': longi,                       //é só declarar e tá good to go
       'statusLixo': sLixo,
       'user':_userName,
     }),
   );
-  debugPrint(response.statusCode.toString());
   if (response.statusCode == 200) {
     // If the server did return a 200 CREATED response,
     // then parse the JSON.
@@ -285,7 +278,7 @@ class RecebeDados extends StatefulWidget {
   _RecebeDadosState createState() => _RecebeDadosState();
 }
 
-class _RecebeDadosState extends State<RecebeDados> {
+class _RecebeDadosState extends State<RecebeDados> {  //Essa página nem foi usada na real
   String _dadosRecebidos="Nada aqui, por enquanto!";
   Future<Album> futureAlbum;
   @override
@@ -321,14 +314,11 @@ class _RecebeDadosState extends State<RecebeDados> {
                   FutureBuilder<Album>(
                     future: futureAlbum,
                     builder:  (context, snapshot) {
-              if (snapshot.hasData) {
-                debugPrint(snapshot.data.title);
-                return Text(snapshot.data.title);
-
-              } else if (snapshot.hasError) {
+              if (snapshot.hasData) 
+                return Text(snapshot.data.title); 
+              else if (snapshot.hasError)
                 return Text("${snapshot.error}");
-              }
-              // By default, show a loading spinner.
+              // CircularProgress é mostrado por padrão.
               return CircularProgressIndicator();
               }, 
                     );
@@ -356,8 +346,8 @@ Future<Album> fetchAlbum() async{
 }
 //Função pra facilitar input do endereço NGROK
 String retornaNgrok(String s){
-  if(s.substring(0,7) != "https://"){
-    s="https://"+s;
+  if(s.substring(0,7) != "https://" || s.substring(0,6) != "http://"){
+    s="https://" + s;
   }
   if(!s.contains(".ngrok.io")){
     s=s+".ngrok.io";

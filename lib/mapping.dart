@@ -15,7 +15,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:pcs_prj/main.dart';
 import 'package:permission/permission.dart';
-const gmApi = 'AIzaSyBwxya-OarYHNjXHXKSiTn_gNUHw9AYlcc';
+
+const gmApi = 'sua_chave_aqui';
 
 class GPSpage extends StatefulWidget {
   @override
@@ -32,7 +33,6 @@ class _GPSpageState extends State<GPSpage> {
   void _setaColetas(){
     List<LatLng> temp = List<LatLng>();
     for(var i=0;i<cGeral.dados.length;i++){
-      debugPrint(cGeral.dados[i].latitude.toString());debugPrint(cGeral.dados[i].longitude.toString());
       temp.add(LatLng(cGeral.dados[i].latitude,cGeral.dados[i].longitude));
       _rotasColeta=temp.toSet().toList();
     }
@@ -50,14 +50,14 @@ class _GPSpageState extends State<GPSpage> {
     } else {
       for(var c=0;c<_rotasColeta.length-1;c++){
       aux = await googleMapPolyline.getCoordinatesWithLocation(
-          origin: _rotasColeta[c],
-          destination: _rotasColeta[c+1],
-          mode: RouteMode.driving);
+        origin: _rotasColeta[c],
+        destination: _rotasColeta[c+1],
+        mode: RouteMode.driving);
         routeCoords.addAll(aux);
         _markers.add(Marker(
-          markerId: MarkerId("m${c+1}"),
-          position: _rotasColeta[c+1],
-          infoWindow: InfoWindow(title:"Lixeira ${cGeral.dados[c].status}!",snippet:"${c+1} ª Lixeira a ser coletada")
+        markerId: MarkerId("m${c+1}"),
+        position: _rotasColeta[c+1],
+        infoWindow: InfoWindow(title:"Lixeira ${cGeral.dados[c].status}!",snippet:"${c+1} ª Lixeira a ser coletada")
         ));
       }
     }
@@ -72,13 +72,13 @@ class _GPSpageState extends State<GPSpage> {
   void setPolylines() async {
     Set<Polyline> temp = HashSet<Polyline>();
     temp.add(Polyline(
-          polylineId: PolylineId("p0"),
-          visible: true,
-          points: routeCoords,
-          width: 6,
-          color: Colors.blue,
-          startCap: Cap.roundCap,
-          endCap: Cap.buttCap));
+      polylineId: PolylineId("p"),
+      visible: true,
+      points: routeCoords,
+      width: 6,
+      color: Colors.blue,
+      startCap: Cap.roundCap,
+      endCap: Cap.buttCap));
     polyline=temp.toSet();
   }
   @override
@@ -110,52 +110,52 @@ class _GPSpageState extends State<GPSpage> {
       ),
       body:
       FutureBuilder<DadosList>(
-            future: _recebeCoords(),
-            builder: (BuildContext context,AsyncSnapshot<DadosList> snapshot){
-              List<Widget> children;
-              Widget child;
-              if(snapshot.hasData){
-                cGeral=snapshot.data;
-                child= GoogleMap(
-                  onMapCreated: onMapCreated,
-                  polylines: polyline,
-                  markers: _markers,
-                  myLocationButtonEnabled: true,
-                  myLocationEnabled: true,
-                  initialCameraPosition:
-                    CameraPosition(target: LatLng(-23.5614355,-46.732825), zoom: 15.0),
-                  mapType: MapType.normal,
-                );
-                return Scaffold(body:child);
-              }
-              else if (snapshot.hasError) {
-                children = <Widget>[
-                  Icon(
-                    Icons.error,
-                    color: Colors.red,
-                    size: 60,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Text('Error: ${snapshot.error}'),
-                  )
-                ];
-              }
-              else{
-                children=<Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(left: 80.0),
-                    child:
-                    SizedBox(
-                      child:CircularProgressIndicator(),
-                      width: 200,
-                      height: 200,
-                  ))
-                ];
-              }
-              return Column(mainAxisAlignment: MainAxisAlignment.center,children: children);
-            }
-          ), 
+        future: _recebeCoords(),
+        builder: (BuildContext context,AsyncSnapshot<DadosList> snapshot){
+          List<Widget> children;
+          Widget child;
+          if(snapshot.hasData){
+            cGeral=snapshot.data;
+            child= GoogleMap(
+              onMapCreated: onMapCreated,
+              polylines: polyline,
+              markers: _markers,
+              myLocationButtonEnabled: true,
+              myLocationEnabled: true,
+              initialCameraPosition:
+                CameraPosition(target: LatLng(-23.5614355,-46.732825), zoom: 15.0),
+              mapType: MapType.normal,
+            );
+            return Scaffold(body:child);
+          }
+          else if (snapshot.hasError) {
+            children = <Widget>[
+              Icon(
+                Icons.error,
+                color: Colors.red,
+                size: 60,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text('Error: ${snapshot.error}'),
+              )
+            ];
+          }
+          else{
+            children=<Widget>[
+              Padding(
+                padding: EdgeInsets.only(left: 80.0),
+                child:
+                SizedBox(
+                  child:CircularProgressIndicator(),
+                  width: 200,
+                  height: 200,
+              ))
+            ];
+          }
+          return Column(mainAxisAlignment: MainAxisAlignment.center,children: children);
+        }
+      ), 
     );
   }
 }
